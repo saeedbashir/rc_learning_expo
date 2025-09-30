@@ -1,7 +1,7 @@
 import { Link } from "expo-router";
 import React from "react";
 import { FlatList, View } from "react-native";
-import MovieCard from "../../../components/Home/MovieCard";
+import MovieCard from "../../../components/MovieCard";
 import { getMovies } from "../../../utils/dataParser";
 import styles from "../home/styles";
 

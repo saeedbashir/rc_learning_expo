@@ -1,6 +1,9 @@
 {
-  "name": "John Doe",
-  "email": "john.doe@example.com",
+  "name": "Saeed Bashir",
+  "email": "saeed.bashir@arbisoft.com",
   "bio": "Mobile developer and movie enthusiast.",
-  "avatar": "https://i.pravatar.cc/150?img=3"
+  "avatar": "https://i.pravatar.cc/150?img=3",
+  "location": "Lahore Punjab, Pakistan",
+  "followers": 1240,
+  "following": 980
 }

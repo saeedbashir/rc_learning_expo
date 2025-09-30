@@ -12,6 +12,17 @@ export default function ProfileScreen() {
       <Text style={styles.name}>{profile.name}</Text>
       <Text style={styles.email}>{profile.email}</Text>
       <Text style={styles.bio}>{profile.bio}</Text>
+
+      <View style={styles.stats}>
+        <View style={styles.statBox}>
+          <Text style={styles.statNumber}>{profile.followers}</Text>
+          <Text style={styles.statLabel}>Followers</Text>
+        </View>
+        <View style={styles.statBox}>
+          <Text style={styles.statNumber}>{profile.following}</Text>
+          <Text style={styles.statLabel}>Following</Text>
+        </View>
+      </View>
     </View>
   );
 }

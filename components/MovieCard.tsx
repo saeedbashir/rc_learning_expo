@@ -1,73 +1,73 @@
-import React from "react";
-import { Image, StyleSheet, Text, TouchableOpacity, View } from "react-native";
+import React from 'react';
+import { Image, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 
 export type Movie = {
   id: string;
   title: string;
-  year: number;
-  genre: string;
-  rating: number;
+  year?: number | string;
+  genre?: string;
+  rating?: number;
   duration?: string;
   director?: string;
   poster: string;
-  description: string;
+  description?: string;
 };
 
 type MovieCardProps = {
   movie: Movie;
   onPress?: () => void;
+  style?: object; // allow parent to override styles
 };
 
-export default function MovieCard({ movie, onPress }: MovieCardProps) {
+export default function MovieCard({ movie, onPress, style }: MovieCardProps) {
   return (
-    <TouchableOpacity onPress={onPress} disabled={!onPress} style={styles.card}>
+    <TouchableOpacity
+      onPress={onPress}
+      disabled={!onPress}
+      style={[styles.card, style]}
+      activeOpacity={0.8}>
       <Image source={{ uri: movie.poster }} style={styles.poster} />
-      
       <View style={styles.info}>
-        <Text style={styles.title}>{movie.title}</Text>
-        <Text style={styles.meta}>
-          {movie.year} • {movie.genre}
+        <Text style={styles.title} numberOfLines={2}>
+          {movie.title}
         </Text>
         <Text style={styles.meta}>
-          ⭐ {movie.rating} • {movie.duration}
+          {movie.year ? `${movie.year}` : ''} {movie.genre ? `• ${movie.genre}` : ''}
         </Text>
-        {movie.director && (
-          <Text style={styles.meta}>🎬 {movie.director}</Text>
-        )}
+        <Text style={styles.meta}>{movie.rating ? `⭐ ${movie.rating}` : ''}</Text>
       </View>
     </TouchableOpacity>
   );
 }
 
-// Using inline styling in this file for different flavour
 const styles = StyleSheet.create({
   card: {
-    flexDirection: "row",      // Poster + Info side by side
-    padding: 10,
-    borderBottomWidth: 1,
-    borderColor: "#ccc",
-    alignItems: "center",      // Align poster + text vertically
+    flex: 1, // 🔑 makes card expand in grid
+    margin: 8,
+    borderRadius: 8,
+    backgroundColor: '#fff',
+    overflow: 'hidden',
+    elevation: 3,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.2,
+    shadowRadius: 4,
   },
   poster: {
-    width: 90,
-    height: 120,
-    borderRadius: 5,
-    marginRight: 10,
+    width: '100%',
+    height: 200,
   },
   info: {
-    flex: 1,                   // Take remaining space
-    flexDirection: "column",   // Stack texts vertically
-    justifyContent: "space-between",
-    gap: 8,
+    padding: 8,
   },
   title: {
-    fontSize: 18,
-    fontWeight: "bold",
-    marginBottom: 4,
+    fontSize: 14,
+    fontWeight: 'bold',
+    marginBottom: 2,
+    color: '#333',
   },
   meta: {
-    fontSize: 14,
-    color: "#555",
-    marginBottom: 2,
+    fontSize: 12,
+    color: '#666',
   },
 });

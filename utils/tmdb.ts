@@ -1,0 +1,24 @@
+import axios from 'axios';
+
+const API_KEY = '935386f1adb33802dffaa2d89bcf4539';
+const BASE_URL = 'https://api.themoviedb.org/3';
+
+const tmdb = axios.create({
+  baseURL: BASE_URL,
+  params: { api_key: API_KEY, language: 'en-US' },
+});
+
+export async function getTrendingMovies() {
+  const res = await tmdb.get('/trending/movie/day');
+  return res.data.results;
+}
+
+export async function getPopularMovies(page = 1) {
+  const res = await tmdb.get('/movie/popular', { params: { page } });
+  return res.data;
+}
+
+export async function getMovieDetails(id: number) {
+  const res = await tmdb.get(`/movie/${id}`);
+  return res.data;
+}

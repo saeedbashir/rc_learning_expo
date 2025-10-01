@@ -1,5 +1,5 @@
-import { StyleSheet } from "react-native";
-import colors from "../../../theme/colors";
+import { StyleSheet } from 'react-native';
+import colors from '../../../theme/colors';
 
 export default StyleSheet.create({
   container: {
@@ -8,13 +8,13 @@ export default StyleSheet.create({
     padding: 10,
   },
   poster: {
-    width: "100%",
+    width: '100%',
     height: 300,
     borderRadius: 10,
   },
   title: {
     fontSize: 22,
-    fontWeight: "bold",
+    fontWeight: 'bold',
     color: colors.text,
     marginVertical: 10,
   },
@@ -30,39 +30,45 @@ export default StyleSheet.create({
   },
 
   infoRow: {
-    flexDirection: "row",
-    justifyContent: "flex-start",
-    alignItems: "center",
+    flexDirection: 'row',
+    justifyContent: 'flex-start',
+    alignItems: 'center',
     marginBottom: 8,
     gap: 8,
   },
   infoLabel: {
     fontSize: 16,
     color: colors.text,
-    fontWeight: "500",
+    fontWeight: '500',
   },
   infoValue: {
     fontSize: 16,
     color: colors.muted,
   },
   tagContainer: {
-    flexDirection: "row",
-    flexWrap: "wrap", // allows wrapping
-    justifyContent: "flex-start",
+    flexDirection: 'row',
+    flexWrap: 'wrap', // allows wrapping
+    justifyContent: 'flex-start',
     marginTop: 20,
   },
   tagBox: {
-    backgroundColor: colors.muted + "22",
+    backgroundColor: colors.muted + '22',
     paddingHorizontal: 10,
     paddingVertical: 6,
     borderRadius: 12,
     margin: 4,
     flexGrow: 1,
-    alignItems: "stretch",
+    alignItems: 'stretch',
   },
   tagText: {
     fontSize: 12,
     color: colors.text,
-    textAlign: "center",
+    textAlign: 'center',
+  },
+  sectionTitle: {
+    fontSize: 20,
+    fontWeight: 'bold',
+    color: '#333',
+    marginVertical: 12,
   },
 });

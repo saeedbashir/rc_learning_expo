@@ -1,9 +1,19 @@
+// app/(tabs)/home/index.tsx
 import { Link } from 'expo-router';
 import React, { useCallback, useEffect, useState } from 'react';
-import { ActivityIndicator, FlatList, RefreshControl, ScrollView, Text, View } from 'react-native';
-import MovieCard from '../../../components/MovieCard';
+import { FlatList, RefreshControl } from 'react-native';
+import {
+  ColumnWrapper,
+  ContentContainer,
+  FooterLoader,
+  Loader,
+  LoadingContainer,
+  PopularCard,
+  ScrollWrapper,
+  SectionTitle,
+  TrendingCard,
+} from '../../../theme/styles/homeStyles';
 import { getPopularMovies, getTrendingMovies } from '../../../utils/tmdb';
-import styles from '../home/styles';
 
 type TMDBMovie = {
   id: number;
@@ -13,6 +23,32 @@ type TMDBMovie = {
   poster_path: string;
   overview: string;
 };
+
+function MoviesHeader({ trending }: { trending: TMDBMovie[] }) {
+  return (
+    <>
+      <SectionTitle>🔥 Trending</SectionTitle>
+      <ScrollWrapper>
+        {trending.map(item => (
+          <Link key={item.id} href={`/home/movie/${item.id}`} asChild>
+            <TrendingCard
+              movie={{
+                id: item.id.toString(),
+                title: item.title,
+                year: item.release_date?.split('-')[0],
+                genre: 'N/A',
+                rating: item.vote_average,
+                poster: `https://image.tmdb.org/t/p/w500${item.poster_path}`,
+                description: item.overview,
+              }}
+            />
+          </Link>
+        ))}
+      </ScrollWrapper>
+      <SectionTitle>⭐ Popular</SectionTitle>
+    </>
+  );
+}
 
 export default function MoviesListScreen() {
   const [trending, setTrending] = useState<TMDBMovie[]>([]);
@@ -62,9 +98,9 @@ export default function MoviesListScreen() {
 
   if (loading) {
     return (
-      <View style={[styles.container, { justifyContent: 'center', alignItems: 'center' }]}>
-        <ActivityIndicator size="large" color="dodgerblue" />
-      </View>
+      <LoadingContainer style={{ justifyContent: 'center', alignItems: 'center' }}>
+        <Loader />
+      </LoadingContainer>
     );
   }
 
@@ -72,13 +108,12 @@ export default function MoviesListScreen() {
     <FlatList
       data={popular}
       numColumns={2}
-      columnWrapperStyle={{ paddingHorizontal: 8 }}
-      contentContainerStyle={{ paddingBottom: 16 }}
+      columnWrapperStyle={ColumnWrapper}
+      contentContainerStyle={ContentContainer}
       keyExtractor={item => item.id.toString()}
       renderItem={({ item }) => (
         <Link href={`/home/movie/${item.id}`} asChild>
-          <MovieCard
-            style={{ flex: 1, margin: 8 }} // use available space for 2 cards
+          <PopularCard
             movie={{
               id: item.id.toString(),
               title: item.title,
@@ -94,38 +129,8 @@ export default function MoviesListScreen() {
       onEndReached={loadMore}
       onEndReachedThreshold={0.1}
       refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} />}
-      ListHeaderComponent={
-        <View>
-          <Text style={styles.sectionTitle}>🔥 Trending</Text>
-          <ScrollView
-            horizontal
-            showsHorizontalScrollIndicator={false}
-            contentContainerStyle={{ paddingHorizontal: 8 }}>
-            {trending.map(item => (
-              <Link key={item.id} href={`/home/movie/${item.id}`} asChild>
-                <MovieCard
-                  style={{ width: 160, marginHorizontal: 8 }} // fixed size for trending items
-                  movie={{
-                    id: item.id.toString(),
-                    title: item.title,
-                    year: item.release_date?.split('-')[0],
-                    genre: 'N/A',
-                    rating: item.vote_average,
-                    poster: `https://image.tmdb.org/t/p/w500${item.poster_path}`,
-                    description: item.overview,
-                  }}
-                />
-              </Link>
-            ))}
-          </ScrollView>
-          <Text style={styles.sectionTitle}>⭐ Popular</Text>
-        </View>
-      }
-      ListFooterComponent={
-        loadingMore ? (
-          <ActivityIndicator size="small" color="dodgerblue" style={{ margin: 16 }} />
-        ) : null
-      }
+      ListHeaderComponent={<MoviesHeader trending={trending} />}
+      ListFooterComponent={loadingMore ? <FooterLoader /> : null}
     />
   );
 }

@@ -1,5 +1,6 @@
+// components/MovieCard.tsx
 import React from 'react';
-import { Image, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+import styled from 'styled-components/native';
 
 export type Movie = {
   id: string;
@@ -16,58 +17,61 @@ export type Movie = {
 type MovieCardProps = {
   movie: Movie;
   onPress?: () => void;
-  style?: object; // allow parent to override styles
+  style?: object;
 };
 
 export default function MovieCard({ movie, onPress, style }: MovieCardProps) {
   return (
-    <TouchableOpacity
-      onPress={onPress}
-      disabled={!onPress}
-      style={[styles.card, style]}
-      activeOpacity={0.8}>
-      <Image source={{ uri: movie.poster }} style={styles.poster} />
-      <View style={styles.info}>
-        <Text style={styles.title} numberOfLines={2}>
-          {movie.title}
-        </Text>
-        <Text style={styles.meta}>
+    <Card onPress={onPress} disabled={!onPress} style={style} activeOpacity={0.8}>
+      <Poster source={{ uri: movie.poster }} resizeMode="cover" />
+      <Info>
+        <Title numberOfLines={2}>{movie.title}</Title>
+        <Meta>
           {movie.year ? `${movie.year}` : ''} {movie.genre ? `• ${movie.genre}` : ''}
-        </Text>
-        <Text style={styles.meta}>{movie.rating ? `⭐ ${movie.rating}` : ''}</Text>
-      </View>
-    </TouchableOpacity>
+        </Meta>
+        {movie.rating !== undefined && movie.rating !== null && (
+          <Meta>⭐ {movie.rating.toFixed(1)}</Meta>
+        )}
+      </Info>
+    </Card>
   );
 }
 
-const styles = StyleSheet.create({
-  card: {
-    flex: 1, // 🔑 makes card expand in grid
-    margin: 8,
-    borderRadius: 8,
-    backgroundColor: '#fff',
-    overflow: 'hidden',
-    elevation: 3,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.2,
-    shadowRadius: 4,
-  },
-  poster: {
-    width: '100%',
-    height: 200,
-  },
-  info: {
-    padding: 8,
-  },
-  title: {
-    fontSize: 14,
-    fontWeight: 'bold',
-    marginBottom: 2,
-    color: '#333',
-  },
-  meta: {
-    fontSize: 12,
-    color: '#666',
-  },
-});
+// =================== styled-components ===================
+const Card = styled.TouchableOpacity`
+  flex: 1;
+  margin: 8px;
+  border-radius: 12px;
+  background-color: #fff;
+  overflow: hidden;
+
+  /* iOS shadow */
+  shadow-color: #000;
+  shadow-offset: 0px 2px;
+  shadow-opacity: 0.15;
+  shadow-radius: 4px;
+
+  /* Android elevation */
+  elevation: 3;
+`;
+
+const Poster = styled.Image`
+  width: 100%;
+  height: 220px;
+`;
+
+const Info = styled.View`
+  padding: 8px;
+`;
+
+const Title = styled.Text`
+  font-size: 15px;
+  font-weight: 600;
+  color: #222;
+  margin-bottom: 4px;
+`;
+
+const Meta = styled.Text`
+  font-size: 12px;
+  color: #666;
+`;

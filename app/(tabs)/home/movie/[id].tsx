@@ -1,8 +1,22 @@
+// app/(tabs)/home/movie/[id].tsx
 import { useLocalSearchParams } from 'expo-router';
 import React, { useEffect, useState } from 'react';
-import { ActivityIndicator, Image, ScrollView, Text, View } from 'react-native';
+import { ActivityIndicator } from 'react-native';
+import {
+  Container,
+  Description,
+  InfoLabel,
+  InfoRow,
+  InfoValue,
+  LoadingContainer,
+  Poster,
+  Subtitle,
+  TagBox,
+  TagContainer,
+  TagText,
+  Title,
+} from '../../../../theme/styles/movieDetailStyles';
 import { getMovieDetails } from '../../../../utils/tmdb';
-import styles from '../../home/styles';
 
 type MovieDetail = {
   id: number;
@@ -20,7 +34,6 @@ export default function MovieDetailScreen() {
   const [movie, setMovie] = useState<MovieDetail | null>(null);
   const [loading, setLoading] = useState(true);
 
-  // Define local tags (not from API)
   const tags = ['Action', 'Drama', 'Thriller'];
 
   useEffect(() => {
@@ -40,61 +53,41 @@ export default function MovieDetailScreen() {
 
   if (loading) {
     return (
-      <View style={[styles.container, { flex: 1, justifyContent: 'center', alignItems: 'center' }]}>
+      <LoadingContainer>
         <ActivityIndicator size="large" color="dodgerblue" />
-      </View>
+      </LoadingContainer>
     );
   }
 
-  if (!movie) return <Text style={{ padding: 16 }}>Movie not found</Text>;
+  if (!movie) return <Title>Movie not found</Title>;
 
   return (
-    <ScrollView style={styles.container} contentContainerStyle={{ paddingBottom: 24 }}>
-      {/* Poster */}
-      <Image
-        source={{ uri: `https://image.tmdb.org/t/p/w500${movie.poster_path}` }}
-        style={{
-          width: '100%',
-          aspectRatio: 2 / 3, // ensures poster proportions
-          borderRadius: 8,
-        }}
-        resizeMode="cover"
-      />
-
-      {/* Title */}
-      <Text style={styles.title}>{movie.title}</Text>
-
-      {/* Subtitle */}
-      <Text style={styles.subtitle}>
+    <Container contentContainerStyle={{ paddingBottom: 24 }}>
+      <Poster source={{ uri: `https://image.tmdb.org/t/p/w500${movie.poster_path}` }} />
+      <Title>{movie.title}</Title>
+      <Subtitle>
         {movie.genres?.map(g => g.name).join(', ') || 'N/A'} |{' '}
         {movie.release_date?.split('-')[0] || 'Unknown'} | ⭐ {movie.vote_average.toFixed(1)}
-      </Text>
+      </Subtitle>
+      <Description>{movie.overview}</Description>
 
-      {/* Description */}
-      <Text style={styles.description}>{movie.overview}</Text>
+      <InfoRow>
+        <InfoLabel>⏱ Duration</InfoLabel>
+        <InfoValue>{movie.runtime ? `${movie.runtime} min` : 'N/A'}</InfoValue>
+      </InfoRow>
 
-      {/* Extra info */}
-      <View style={{ marginTop: 16 }}>
-        <View style={styles.infoRow}>
-          <Text style={styles.infoLabel}>⏱ Duration</Text>
-          <Text style={styles.infoValue}>{movie.runtime ? `${movie.runtime} min` : 'N/A'}</Text>
-        </View>
-        {/* Director is not in TMDB /movie/{id}, you’d need /credits for it.
-            For now we’ll just mock it */}
-        <View style={styles.infoRow}>
-          <Text style={styles.infoLabel}>🎬 Director</Text>
-          <Text style={styles.infoValue}>Unknown</Text>
-        </View>
-      </View>
+      <InfoRow>
+        <InfoLabel>🎬 Director</InfoLabel>
+        <InfoValue>Unknown</InfoValue>
+      </InfoRow>
 
-      {/* Tags */}
-      <View style={styles.tagContainer}>
+      <TagContainer>
         {tags.map((tag, index) => (
-          <View key={index} style={styles.tagBox}>
-            <Text style={styles.tagText}>{tag}</Text>
-          </View>
+          <TagBox key={index}>
+            <TagText>{tag}</TagText>
+          </TagBox>
         ))}
-      </View>
-    </ScrollView>
+      </TagContainer>
+    </Container>
   );
 }

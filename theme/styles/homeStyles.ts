@@ -7,6 +7,8 @@ export const Container = styled.View`
   flex: 1;
   background-color: ${colors.background};
   padding: 16px;
+  justifycontent: center;
+  alignitems: center;
 `;
 
 export const SectionTitle = styled.Text`

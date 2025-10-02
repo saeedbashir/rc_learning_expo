@@ -22,3 +22,15 @@ export async function getMovieDetails(id: number) {
   const res = await tmdb.get(`/movie/${id}`);
   return res.data;
 }
+
+// Get all available movie genres
+export async function getMovieGenres() {
+  const res = await tmdb.get('/genre/movie/list');
+  return res.data.genres;
+}
+
+// Get movies for a specific genre (with pagination)
+export async function getMoviesByGenre(genreId: number, page = 1) {
+  const res = await tmdb.get('/discover/movie', { params: { with_genres: genreId, page } });
+  return res.data.results;
+}

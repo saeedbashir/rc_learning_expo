@@ -1,18 +1,7 @@
 // components/MovieCard.tsx
+import { Movie } from '@/type/types';
 import React from 'react';
 import styled from 'styled-components/native';
-
-export type Movie = {
-  id: string;
-  title: string;
-  year?: number | string;
-  genre?: string;
-  rating?: number;
-  duration?: string;
-  director?: string;
-  poster: string;
-  description?: string;
-};
 
 type MovieCardProps = {
   movie: Movie;
@@ -20,7 +9,7 @@ type MovieCardProps = {
   style?: object;
 };
 
-export default function MovieCard({ movie, onPress, style }: MovieCardProps) {
+function MovieCard({ movie, onPress, style }: MovieCardProps) {
   return (
     <Card onPress={onPress} disabled={!onPress} style={style} activeOpacity={0.8}>
       <Poster source={{ uri: movie.poster }} resizeMode="cover" />
@@ -37,7 +26,18 @@ export default function MovieCard({ movie, onPress, style }: MovieCardProps) {
   );
 }
 
-// =================== styled-components ===================
+export default React.memo(MovieCard, (prevProps, nextProps) => {
+  // Only re-render if these specific props change
+  return (
+    prevProps.movie.id === nextProps.movie.id &&
+    prevProps.movie.title === nextProps.movie.title &&
+    prevProps.movie.poster === nextProps.movie.poster &&
+    prevProps.movie.rating === nextProps.movie.rating &&
+    prevProps.onPress === nextProps.onPress &&
+    prevProps.style === nextProps.style
+  );
+});
+
 const Card = styled.TouchableOpacity`
   flex: 1;
   margin: 8px;

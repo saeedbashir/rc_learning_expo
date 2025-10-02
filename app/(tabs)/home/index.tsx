@@ -1,7 +1,9 @@
 // app/(tabs)/home/index.tsx
+import { TMDBMovie } from '@/type/types';
 import { Link } from 'expo-router';
 import React, { useCallback, useEffect, useState } from 'react';
 import { FlatList, RefreshControl } from 'react-native';
+
 import {
   ColumnWrapper,
   ContentContainer,
@@ -14,15 +16,6 @@ import {
   TrendingCard,
 } from '../../../theme/styles/homeStyles';
 import { getPopularMovies, getTrendingMovies } from '../../../utils/tmdb';
-
-type TMDBMovie = {
-  id: number;
-  title: string;
-  release_date?: string;
-  vote_average: number;
-  poster_path: string;
-  overview: string;
-};
 
 function MoviesHeader({ trending }: { trending: TMDBMovie[] }) {
   return (
@@ -98,7 +91,7 @@ export default function MoviesListScreen() {
 
   if (loading) {
     return (
-      <LoadingContainer style={{ justifyContent: 'center', alignItems: 'center' }}>
+      <LoadingContainer>
         <Loader />
       </LoadingContainer>
     );

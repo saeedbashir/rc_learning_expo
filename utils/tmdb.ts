@@ -34,3 +34,21 @@ export async function getMoviesByGenre(genreId: number, page = 1) {
   const res = await tmdb.get('/discover/movie', { params: { with_genres: genreId, page } });
   return res.data.results;
 }
+
+// Get movie videos (trailers, teasers, clips)
+export async function getMovieVideos(id: number) {
+  const res = await tmdb.get(`/movie/${id}/videos`);
+  return res.data.results;
+}
+
+// Get movie credits (cast & crew)
+export async function getMovieCredits(id: number) {
+  const res = await tmdb.get(`/movie/${id}/credits`);
+  return res.data;
+}
+
+// Get movie recommendations
+export async function getMovieRecommendations(id: number, page = 1) {
+  const res = await tmdb.get(`/movie/${id}/recommendations`, { params: { page } });
+  return res.data.results;
+}

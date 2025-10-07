@@ -21,7 +21,7 @@ import { getMovieGenres, getMoviesByGenre } from '../../../utils/tmdb';
 // memoized TrendingCard to prevent unnecessary re-renders
 const TrendingCard = React.memo(TrendingCardBase);
 
-export default function SearchScreen() {
+const SearchScreen = () => {
   const [sections, setSections] = useState<SectionData[]>([]);
   const [loading, setLoading] = useState(true);
 
@@ -77,7 +77,6 @@ export default function SearchScreen() {
     fetchGenresAndMovies();
   }, []);
 
-  // memoized load more handler
   const loadMoreMovies = useCallback(
     async (genreId: number) => {
       const section = sections.find(s => s.genreId === genreId);
@@ -111,7 +110,6 @@ export default function SearchScreen() {
     [sections],
   );
 
-  // memoized renderItem for movie card
   const renderMovieCard = useCallback(
     ({ item }: { item: TMDBMovie }) => (
       <Link href={`/home/movie/${item.id}`} asChild>
@@ -131,7 +129,6 @@ export default function SearchScreen() {
     [],
   );
 
-  // memoized renderSectionFooter
   const renderSectionFooter = useCallback(
     ({ section }: { section: SectionData }) => (
       <FlatList
@@ -182,7 +179,8 @@ export default function SearchScreen() {
       removeClippedSubviews={true}
       initialNumToRender={3}
       maxToRenderPerBatch={5}
-      // windowSize={10}
     />
   );
-}
+};
+
+export default SearchScreen;

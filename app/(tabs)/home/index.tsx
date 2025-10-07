@@ -17,7 +17,7 @@ import {
 } from '../../../theme/styles/homeStyles';
 import { getPopularMovies, getTrendingMovies } from '../../../utils/tmdb';
 
-function MoviesHeader({ trending }: { trending: TMDBMovie[] }) {
+const MoviesHeader = ({ trending }: { trending: TMDBMovie[] }) => {
   return (
     <>
       <SectionTitle>🔥 Trending</SectionTitle>
@@ -41,9 +41,9 @@ function MoviesHeader({ trending }: { trending: TMDBMovie[] }) {
       <SectionTitle>⭐ Popular</SectionTitle>
     </>
   );
-}
+};
 
-export default function MoviesListScreen() {
+const MoviesListScreen = () => {
   const [trending, setTrending] = useState<TMDBMovie[]>([]);
   const [popular, setPopular] = useState<TMDBMovie[]>([]);
   const [page, setPage] = useState(1);
@@ -126,4 +126,6 @@ export default function MoviesListScreen() {
       ListFooterComponent={loadingMore ? <FooterLoader /> : null}
     />
   );
-}
+};
+
+export default MoviesListScreen;

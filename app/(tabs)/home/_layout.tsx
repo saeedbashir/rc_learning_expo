@@ -1,10 +1,12 @@
-import { Stack } from "expo-router";
+import { Stack } from 'expo-router';
 
-export default function HomeStack() {
+const HomeStack = () => {
   return (
     <Stack>
-      <Stack.Screen name="index" options={{ title: "Movies" }} />
-      <Stack.Screen name="movie/[id]" options={{ title: "Movie Details" }} />
+      <Stack.Screen name="index" options={{ title: 'Movies' }} />
+      <Stack.Screen name="movie/[id]" options={{ title: 'Movie Details' }} />
     </Stack>
   );
-}
+};
+
+export default HomeStack;

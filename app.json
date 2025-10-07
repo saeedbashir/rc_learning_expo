@@ -1,6 +1,6 @@
 {
   "expo": {
-    "name": "rc_learning_expo",
+    "name": "Expo Learning",
     "slug": "rc_learning_expo",
     "version": "1.0.0",
     "orientation": "portrait",
@@ -10,7 +10,8 @@
     "newArchEnabled": true,
     "ios": {
       "supportsTablet": true,
-      "bundleIdentifier": "com.anonymous.rc-learning-expo"
+      "bundleIdentifier": "com.saeedbashir.learning.expo",
+      "googleServicesFile": "./GoogleService-Info.plist"
     },
     "android": {
       "adaptiveIcon": {
@@ -20,7 +21,8 @@
         "monochromeImage": "./assets/images/android-icon-monochrome.png"
       },
       "edgeToEdgeEnabled": true,
-      "predictiveBackGestureEnabled": false
+      "predictiveBackGestureEnabled": false,
+      "package": "com.saeedbashir.learning.expo"
     },
     "web": {
       "output": "static",

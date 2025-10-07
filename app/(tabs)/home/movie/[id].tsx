@@ -1,9 +1,12 @@
 // app/(tabs)/home/movie/[id].tsx
-import CastModal from '@/components/CastModal';
+import { Ionicons } from '@expo/vector-icons';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import React, { useEffect, useState } from 'react';
-import { ActivityIndicator, FlatList } from 'react-native';
+import { ActivityIndicator, Alert, FlatList } from 'react-native';
 import YoutubeIframe from 'react-native-youtube-iframe';
+
+import CastModal from '@/components/CastModal';
+import { useMovieLists } from '../../../../hooks/useMovieLists';
 import {
   CastImage,
   CastItem,
@@ -21,6 +24,8 @@ import {
   SectionLabel,
   Subtitle,
   Title,
+  WatchlistButton,
+  WatchlistButtonText,
 } from '../../../../theme/styles/movieDetailStyles';
 import {
   getMovieCredits,
@@ -44,13 +49,25 @@ export default function MovieDetailScreen() {
   const { id } = useLocalSearchParams();
   const router = useRouter();
 
+  const {
+    lists,
+    createList,
+    addMovieToList,
+    removeMovieFromList,
+    fetchLists,
+    loading: listsLoading,
+  } = useMovieLists();
+
   const [movie, setMovie] = useState<MovieDetail | null>(null);
   const [loading, setLoading] = useState(true);
   const [trailerKey, setTrailerKey] = useState<string | null>(null);
   const [cast, setCast] = useState<any[]>([]);
   const [recommendations, setRecommendations] = useState<any[]>([]);
   const [selectedCast, setSelectedCast] = useState<any | null>(null);
+  const [inWatchlist, setInWatchlist] = useState(false);
+  const [watchlistId, setWatchlistId] = useState<string | null>(null);
 
+  // Fetch movie details
   useEffect(() => {
     if (!id) return;
     const fetchMovie = async () => {
@@ -78,7 +95,51 @@ export default function MovieDetailScreen() {
     fetchMovie();
   }, [id]);
 
-  if (loading) {
+  // Check if movie is in Watchlist
+  useEffect(() => {
+    if (!id || listsLoading) return;
+
+    const watchlist = lists.find(l => l.name.toLowerCase() === 'watchlist');
+    if (watchlist) {
+      setWatchlistId(watchlist.id);
+      const exists = watchlist.movies.some(m => m.id === Number(id));
+      setInWatchlist(exists);
+    }
+  }, [id, lists, listsLoading]);
+
+  // Handle Add/Remove Watchlist
+  const toggleWatchlist = async () => {
+    if (!movie) return;
+
+    let targetListId = watchlistId;
+    let targetList = lists.find(l => l.name.toLowerCase() === 'watchlist');
+
+    // Create "Watchlist" if it doesn’t exist
+    if (!targetList) {
+      const createdList = await createList('Watchlist');
+      if (!createdList) {
+        Alert.alert('Error', 'Could not create or locate Watchlist.');
+        return;
+      }
+      targetListId = createdList.id;
+      setWatchlistId(createdList.id);
+    } else {
+      targetListId = targetList.id;
+    }
+
+    // Add or remove movie
+    if (inWatchlist) {
+      await removeMovieFromList(targetListId!, movie.id);
+      setInWatchlist(false);
+      Alert.alert('Removed', `${movie.title} has been removed from your Watchlist.`);
+    } else {
+      await addMovieToList(targetListId!, movie);
+      setInWatchlist(true);
+      Alert.alert('Added', `${movie.title} has been added to your Watchlist.`);
+    }
+  };
+
+  if (loading || listsLoading) {
     return (
       <LoadingContainer>
         <ActivityIndicator size="large" color="dodgerblue" />
@@ -99,12 +160,19 @@ export default function MovieDetailScreen() {
         </Subtitle>
         <Description>{movie.overview}</Description>
 
+        {/* Watchlist Button */}
+        <WatchlistButton inWatchlist={inWatchlist} onPress={toggleWatchlist}>
+          <Ionicons name={inWatchlist ? 'checkmark' : 'add'} size={20} color="#fff" />
+          <WatchlistButtonText>
+            {inWatchlist ? 'Remove from Watchlist' : 'Add to Watchlist'}
+          </WatchlistButtonText>
+        </WatchlistButton>
+
         <InfoRow>
           <InfoLabel>⏱ Duration</InfoLabel>
           <InfoValue>{movie.runtime ? `${movie.runtime} min` : 'N/A'}</InfoValue>
         </InfoRow>
 
-        {/* Trailer Section */}
         {trailerKey && (
           <>
             <SectionLabel>🎥 Trailer</SectionLabel>
@@ -112,7 +180,6 @@ export default function MovieDetailScreen() {
           </>
         )}
 
-        {/* Cast Section */}
         {cast.length > 0 && (
           <>
             <SectionLabel>👥 Cast</SectionLabel>
@@ -137,7 +204,6 @@ export default function MovieDetailScreen() {
           </>
         )}
 
-        {/* Recommendations Section */}
         {recommendations.length > 0 && (
           <>
             <SectionLabel>📺 Recommendations</SectionLabel>
@@ -160,7 +226,6 @@ export default function MovieDetailScreen() {
         )}
       </Content>
 
-      {/* Cast Detail Modal */}
       <CastModal
         visible={!!selectedCast}
         onClose={() => setSelectedCast(null)}

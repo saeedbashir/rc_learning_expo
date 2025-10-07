@@ -105,3 +105,21 @@ export const TagBox = styled.View`
   flex-grow: 1;
   align-items: stretch;
 `;
+
+export const WatchlistButton = styled.TouchableOpacity<{ inWatchlist: boolean }>`
+  flex-direction: row;
+  align-items: center;
+  justify-content: center;
+  background-color: ${(props: { inWatchlist?: boolean }) =>
+    props.inWatchlist ? '#ff4c4c' : 'dodgerblue'};
+  padding-vertical: 12px;
+  border-radius: 8px;
+  margin-vertical: 10px;
+`;
+
+export const WatchlistButtonText = styled.Text`
+  color: #fff;
+  font-weight: bold;
+  font-size: 16px;
+  margin-left: 6px;
+`;

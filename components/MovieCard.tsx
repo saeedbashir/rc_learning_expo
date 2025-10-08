@@ -1,7 +1,16 @@
 // components/MovieCard.tsx
+import {
+  Card,
+  Info,
+  LoaderWrapper,
+  Meta,
+  Poster,
+  PosterContainer,
+  Title,
+} from '@/theme/styles/movieCardStyles';
 import { Movie } from '@/type/types';
-import React from 'react';
-import styled from 'styled-components/native';
+import React, { useState } from 'react';
+import { ActivityIndicator } from 'react-native';
 
 type MovieCardProps = {
   movie: Movie;
@@ -10,9 +19,25 @@ type MovieCardProps = {
 };
 
 function MovieCard({ movie, onPress, style }: MovieCardProps) {
+  const [isLoading, setIsLoading] = useState(true);
+
   return (
     <Card onPress={onPress} disabled={!onPress} style={style} activeOpacity={0.8}>
-      <Poster source={{ uri: movie.poster }} resizeMode="cover" />
+      <PosterContainer>
+        {isLoading && (
+          <LoaderWrapper>
+            <ActivityIndicator size="small" color="#999" />
+          </LoaderWrapper>
+        )}
+        <Poster
+          source={{ uri: movie.poster }}
+          contentFit="cover"
+          cachePolicy="disk"
+          onLoadStart={() => setIsLoading(true)}
+          onLoadEnd={() => setIsLoading(false)}
+        />
+      </PosterContainer>
+
       <Info>
         <Title numberOfLines={2}>{movie.title}</Title>
         <Meta>
@@ -37,41 +62,3 @@ export default React.memo(MovieCard, (prevProps, nextProps) => {
     prevProps.style === nextProps.style
   );
 });
-
-const Card = styled.TouchableOpacity`
-  flex: 1;
-  margin: 8px;
-  border-radius: 12px;
-  background-color: #fff;
-  overflow: hidden;
-
-  /* iOS shadow */
-  shadow-color: #000;
-  shadow-offset: 0px 2px;
-  shadow-opacity: 0.15;
-  shadow-radius: 4px;
-
-  /* Android elevation */
-  elevation: 3;
-`;
-
-const Poster = styled.Image`
-  width: 100%;
-  height: 220px;
-`;
-
-const Info = styled.View`
-  padding: 8px;
-`;
-
-const Title = styled.Text`
-  font-size: 15px;
-  font-weight: 600;
-  color: #222;
-  margin-bottom: 4px;
-`;
-
-const Meta = styled.Text`
-  font-size: 12px;
-  color: #666;
-`;

@@ -1,8 +1,13 @@
+import { Image } from 'expo-image';
 import styled from 'styled-components/native';
 import colors from '../colors';
 
 export const Container = styled.ScrollView.attrs({
   showsVerticalScrollIndicator: false,
+  contentContainerStyle: {
+    flexGrow: 1,
+    flexDirection: 'column',
+  },
 })`
   flex: 1;
   background-color: ${colors.background};
@@ -18,9 +23,9 @@ export const LoadingContainer = styled.View`
   align-items: center;
 `;
 
-export const Poster = styled.Image`
+export const Poster = styled(Image)`
   width: 100%;
-  aspect-ratio: 2 / 3;
+  height: 100%;
 `;
 
 export const Title = styled.Text`
@@ -122,4 +127,17 @@ export const WatchlistButtonText = styled.Text`
   font-weight: bold;
   font-size: 16px;
   margin-left: 6px;
+`;
+
+export const PosterContainer = styled.View`
+  width: 100%;
+  height: 420px;
+  background-color: #f2f2f2;
+  justify-content: center;
+  align-items: center;
+`;
+
+export const LoaderWrapper = styled.View`
+  position: absolute;
+  z-index: 10;
 `;

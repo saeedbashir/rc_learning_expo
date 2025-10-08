@@ -14,7 +14,7 @@ export async function getTrendingMovies() {
 }
 
 export async function getPopularMovies(page = 1) {
-  const res = await tmdb.get('/movie/popular', { params: { page } });
+  const res = await tmdb.get('/movie/popular', { params: { page, sort_by: 'popularity.desc' } });
   return res.data;
 }
 
@@ -31,7 +31,9 @@ export async function getMovieGenres() {
 
 // Get movies for a specific genre (with pagination)
 export async function getMoviesByGenre(genreId: number, page = 1) {
-  const res = await tmdb.get('/discover/movie', { params: { with_genres: genreId, page } });
+  const res = await tmdb.get('/discover/movie', {
+    params: { with_genres: genreId, page, sort_by: 'popularity.desc' },
+  });
   return res.data.results;
 }
 

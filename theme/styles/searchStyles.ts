@@ -1,4 +1,5 @@
 //theme/styles/searchStyles.ts
+import MovieCard from '@/components/MovieCard';
 import { ActivityIndicator, View } from 'react-native';
 import styled from 'styled-components/native';
 import colors from '../colors';
@@ -33,3 +34,8 @@ export const LoadMoreLoader = styled(ActivityIndicator).attrs({
   size: 'small',
   color: colors.primary || 'dodgerblue',
 })``;
+
+export const TrendingCard = styled(MovieCard)`
+  width: 160px;
+  margin-horizontal: 8px;
+`;

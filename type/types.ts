@@ -6,6 +6,8 @@ export type TMDBMovie = {
   vote_average: number;
   poster_path: string;
   overview: string;
+  runtime?: number;
+  genres?: { id: number; name: string }[];
 };
 
 export type MovieGenre = {
@@ -30,4 +32,11 @@ export type SectionData = {
   page: number;
   totalPages?: number;
   loadingMore: boolean;
+};
+
+export type MovieList = {
+  id: string;
+  userId: string;
+  name: string;
+  movies: TMDBMovie[];
 };

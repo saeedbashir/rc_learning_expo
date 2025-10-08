@@ -4,7 +4,7 @@ import {
   deleteDoc,
   doc,
   getDoc,
-  getDocs,
+  onSnapshot,
   query,
   setDoc,
   updateDoc,
@@ -13,57 +13,50 @@ import {
 import { useEffect, useState } from 'react';
 import { db } from '../utils/firebaseConfig';
 
-type Movie = {
-  id: number;
-  title: string;
-  poster_path?: string;
-  [key: string]: any;
-};
-
-type MovieList = {
-  id: string;
-  userId: string;
-  name: string;
-  movies: Movie[];
-};
+import { MovieList, TMDBMovie } from '@/type/types';
 
 export function useMovieLists() {
   const [lists, setLists] = useState<MovieList[]>([]);
   const [loading, setLoading] = useState(true);
   const [userId, setUserId] = useState<string | null>(null);
 
-  // Load user from AsyncStorage
   useEffect(() => {
+    let unsubscribe: (() => void) | null = null;
+
     (async () => {
       const storedUser = await AsyncStorage.getItem('user');
-      if (storedUser) {
-        const user = JSON.parse(storedUser);
-        setUserId(user.uid);
-        await fetchLists(user.uid);
+      if (!storedUser) {
+        setLoading(false);
+        return;
       }
-      setLoading(false);
+
+      const user = JSON.parse(storedUser);
+      setUserId(user.uid);
+
+      try {
+        const q = query(collection(db, 'movieLists'), where('userId', '==', user.uid));
+
+        // Real-time listener for movie lists
+        unsubscribe = onSnapshot(q, snapshot => {
+          const userLists: MovieList[] = snapshot.docs.map(doc => {
+            const data = doc.data() as Omit<MovieList, 'id'>;
+            return { id: doc.id, ...data };
+          });
+
+          setLists(userLists);
+          setLoading(false);
+        });
+      } catch (err) {
+        console.error('Failed to subscribe to movie lists:', err);
+        setLoading(false);
+      }
     })();
+
+    // Cleanup on unmount
+    return () => {
+      if (unsubscribe) unsubscribe();
+    };
   }, []);
-
-  // Fetch all lists for the current user
-  const fetchLists = async (uidParam?: string) => {
-    const uid = uidParam || userId;
-    if (!uid) return;
-
-    try {
-      const q = query(collection(db, 'movieLists'), where('userId', '==', uid));
-      const snapshot = await getDocs(q);
-
-      const userLists: MovieList[] = snapshot.docs.map(doc => {
-        const data = doc.data() as Omit<MovieList, 'id'>;
-        return { id: doc.id, ...data };
-      });
-
-      setLists(userLists);
-    } catch (err) {
-      console.error('Failed to fetch lists:', err);
-    }
-  };
 
   // Create a new list (e.g., "Horror", "Watch Later")
   const createList = async (name: string) => {
@@ -76,12 +69,12 @@ export function useMovieLists() {
       movies: [],
     };
     await setDoc(newListRef, newList);
-    setLists(prev => [...prev, newList]);
+    // No need to manually update state — onSnapshot handles it
     return newList;
   };
 
   // Add a movie to a specific list
-  const addMovieToList = async (listId: string, movie: Movie) => {
+  const addMovieToList = async (listId: string, movie: TMDBMovie) => {
     try {
       const listRef = doc(db, 'movieLists', listId);
       const listSnap = await getDoc(listRef);
@@ -93,7 +86,6 @@ export function useMovieLists() {
           : [...data.movies, movie];
 
         await updateDoc(listRef, { movies: updatedMovies });
-        setLists(prev => prev.map(l => (l.id === listId ? { ...l, movies: updatedMovies } : l)));
       }
     } catch (err) {
       console.error('Failed to add movie to list:', err);
@@ -111,7 +103,6 @@ export function useMovieLists() {
         const updatedMovies = data.movies.filter(m => m.id !== movieId);
 
         await updateDoc(listRef, { movies: updatedMovies });
-        setLists(prev => prev.map(l => (l.id === listId ? { ...l, movies: updatedMovies } : l)));
       }
     } catch (err) {
       console.error('Failed to remove movie:', err);
@@ -122,7 +113,7 @@ export function useMovieLists() {
   const deleteList = async (listId: string) => {
     try {
       await deleteDoc(doc(db, 'movieLists', listId));
-      setLists(prev => prev.filter(l => l.id !== listId));
+      // No need to manually update local state — snapshot listener will handle it
     } catch (err) {
       console.error('Failed to delete list:', err);
     }
@@ -135,6 +126,5 @@ export function useMovieLists() {
     addMovieToList,
     removeMovieFromList,
     deleteList,
-    fetchLists,
   };
 }

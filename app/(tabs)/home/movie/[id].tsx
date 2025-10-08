@@ -6,6 +6,7 @@ import { ActivityIndicator, Alert, FlatList } from 'react-native';
 import YoutubeIframe from 'react-native-youtube-iframe';
 
 import CastModal from '@/components/CastModal';
+import { TMDBMovie } from '@/type/types';
 import { useMovieLists } from '../../../../hooks/useMovieLists';
 import {
   CastImage,
@@ -34,17 +35,6 @@ import {
   getMovieVideos,
 } from '../../../../utils/tmdb';
 
-type MovieDetail = {
-  id: number;
-  title: string;
-  release_date?: string;
-  vote_average: number;
-  poster_path: string;
-  overview: string;
-  runtime?: number;
-  genres?: { id: number; name: string }[];
-};
-
 export default function MovieDetailScreen() {
   const { id } = useLocalSearchParams();
   const router = useRouter();
@@ -54,11 +44,10 @@ export default function MovieDetailScreen() {
     createList,
     addMovieToList,
     removeMovieFromList,
-    fetchLists,
     loading: listsLoading,
   } = useMovieLists();
 
-  const [movie, setMovie] = useState<MovieDetail | null>(null);
+  const [movie, setMovie] = useState<TMDBMovie | null>(null);
   const [loading, setLoading] = useState(true);
   const [trailerKey, setTrailerKey] = useState<string | null>(null);
   const [cast, setCast] = useState<any[]>([]);
@@ -95,15 +84,19 @@ export default function MovieDetailScreen() {
     fetchMovie();
   }, [id]);
 
-  // Check if movie is in Watchlist
+  // React to live Firestore updates (auto-updating watchlist state)
   useEffect(() => {
     if (!id || listsLoading) return;
 
     const watchlist = lists.find(l => l.name.toLowerCase() === 'watchlist');
+
     if (watchlist) {
       setWatchlistId(watchlist.id);
       const exists = watchlist.movies.some(m => m.id === Number(id));
       setInWatchlist(exists);
+    } else {
+      setWatchlistId(null);
+      setInWatchlist(false);
     }
   }, [id, lists, listsLoading]);
 
@@ -130,11 +123,9 @@ export default function MovieDetailScreen() {
     // Add or remove movie
     if (inWatchlist) {
       await removeMovieFromList(targetListId!, movie.id);
-      setInWatchlist(false);
       Alert.alert('Removed', `${movie.title} has been removed from your Watchlist.`);
     } else {
       await addMovieToList(targetListId!, movie);
-      setInWatchlist(true);
       Alert.alert('Added', `${movie.title} has been added to your Watchlist.`);
     }
   };

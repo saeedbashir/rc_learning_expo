@@ -1,68 +1,51 @@
 // hooks/useHomeMovies.ts
+import { useGetPopularMoviesQuery, useGetTrendingMoviesQuery } from '@/redux/tmdb';
 import { TMDBMovie } from '@/type/types';
-import { getPopularMovies, getTrendingMovies } from '@/utils/tmdb';
-import { useCallback, useEffect, useState } from 'react';
+import { useEffect, useState } from 'react';
 
 export const useHomeMovies = () => {
-  const [trending, setTrending] = useState<TMDBMovie[]>([]);
-  const [popular, setPopular] = useState<TMDBMovie[]>([]);
-  const [page, setPage] = useState(1);
-  const [loading, setLoading] = useState(true);
-  const [loadingMore, setLoadingMore] = useState(false);
-  const [refreshing, setRefreshing] = useState(false);
+  const [popularPage, setPopularPage] = useState(1);
+  const [popularMovies, setPopularMovies] = useState<TMDBMovie[]>([]);
 
-  // Helper function to merge and remove duplicates by ID
-  const mergeUniqueMovies = useCallback((existing: TMDBMovie[], incoming: TMDBMovie[]) => {
-    const all = [...existing, ...incoming];
-    const unique = Array.from(new Map(all.map(movie => [movie.id, movie])).values());
-    return unique;
-  }, []);
+  // Fetch trending
+  const trendingQuery = useGetTrendingMoviesQuery(undefined);
 
-  const fetchTrending = useCallback(async () => {
-    const data = await getTrendingMovies();
-    setTrending(data);
-  }, []);
+  // Fetch popular with page
+  const popularQuery = useGetPopularMoviesQuery(popularPage);
 
-  const fetchPopular = useCallback(
-    async (pageNum = 1, reset = false) => {
-      const data = await getPopularMovies(pageNum);
-      setPopular(prev => {
-        if (reset) return data.results;
-        return mergeUniqueMovies(prev, data.results);
-      });
-      setPage(data.page);
-    },
-    [mergeUniqueMovies],
-  );
-
+  // Merge popular pages without duplicates
   useEffect(() => {
-    (async () => {
-      setLoading(true);
-      await Promise.all([fetchTrending(), fetchPopular(1, true)]);
-      setLoading(false);
-    })();
-  }, [fetchTrending, fetchPopular]);
+    if (!popularQuery.data?.results) return;
 
-  const loadMore = async () => {
-    if (loadingMore) return;
-    setLoadingMore(true);
-    await fetchPopular(page + 1);
-    setLoadingMore(false);
+    setPopularMovies(prev => {
+      const merged = [...prev, ...popularQuery.data.results];
+      const unique = Array.from(new Map(merged.map(m => [m.id, m])).values());
+      return unique;
+    });
+  }, [popularQuery.data]);
+
+  const trending: TMDBMovie[] = trendingQuery.data?.results ?? [];
+
+  const loading = trendingQuery.isLoading || (popularPage === 1 && popularQuery.isFetching);
+  const loadingMore = popularQuery.isFetching && popularPage > 1;
+
+  const onRefresh = () => {
+    setPopularMovies([]);
+    setPopularPage(1);
+    trendingQuery.refetch();
+    popularQuery.refetch();
   };
 
-  const onRefresh = async () => {
-    if (refreshing) return;
-    setRefreshing(true);
-    await Promise.all([fetchTrending(), fetchPopular(1, true)]);
-    setRefreshing(false);
+  const loadMore = () => {
+    if (!loadingMore) setPopularPage(prev => prev + 1);
   };
 
   return {
     trending,
-    popular,
+    popular: popularMovies,
     loading,
     loadingMore,
-    refreshing,
+    refreshing: loading || popularQuery.isFetching,
     loadMore,
     onRefresh,
   };

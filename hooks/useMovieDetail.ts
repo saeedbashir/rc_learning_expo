@@ -1,21 +1,16 @@
 // hooks/useMovieDetail.ts
 import { useMovieLists } from '@/hooks/useMovieLists';
-import { TMDBMovie } from '@/type/types';
 import {
-  getMovieCredits,
-  getMovieDetails,
-  getMovieRecommendations,
-  getMovieVideos,
-} from '@/utils/tmdb';
-import { useEffect, useState } from 'react';
+  useGetMovieCreditsQuery,
+  useGetMovieDetailsQuery,
+  useGetMovieRecommendationsQuery,
+  useGetMovieVideosQuery,
+} from '@/redux/tmdb';
+import { useEffect, useMemo, useState } from 'react';
 import { Alert } from 'react-native';
 
 export const useMovieDetail = (id?: string | string[]) => {
-  const [movie, setMovie] = useState<TMDBMovie | null>(null);
-  const [loading, setLoading] = useState(true);
-  const [trailerKey, setTrailerKey] = useState<string | null>(null);
-  const [cast, setCast] = useState<any[]>([]);
-  const [recommendations, setRecommendations] = useState<any[]>([]);
+  const movieId = Number(id);
   const [selectedCast, setSelectedCast] = useState<any | null>(null);
   const [inWatchlist, setInWatchlist] = useState(false);
   const [watchlistId, setWatchlistId] = useState<string | null>(null);
@@ -28,58 +23,59 @@ export const useMovieDetail = (id?: string | string[]) => {
     loading: listsLoading,
   } = useMovieLists();
 
-  // Fetch movie details, cast, videos, and recommendations
+  // Fetch data with RTK Query
+  const {
+    data: movie,
+    isLoading: detailsLoading,
+    isError: detailsError,
+  } = useGetMovieDetailsQuery(movieId, { skip: !movieId });
+
+  const { data: videos, isLoading: videosLoading } = useGetMovieVideosQuery(movieId, {
+    skip: !movieId,
+  });
+
+  const { data: credits, isLoading: creditsLoading } = useGetMovieCreditsQuery(movieId, {
+    skip: !movieId,
+  });
+
+  const { data: recommendations, isLoading: recsLoading } = useGetMovieRecommendationsQuery(
+    { id: movieId, page: 1 },
+    { skip: !movieId },
+  );
+
+  const loading = detailsLoading || videosLoading || creditsLoading || recsLoading || listsLoading;
+
+  // Extract trailer key
+  const trailerKey = useMemo(() => {
+    if (!videos) return null;
+    const trailer = videos.results?.find((v: any) => v.type === 'Trailer' && v.site === 'YouTube');
+    return trailer ? trailer.key : null;
+  }, [videos]);
+
+  // Extract cast
+  const cast = useMemo(() => credits?.cast || [], [credits]);
+
+  // Watchlist Sync
   useEffect(() => {
-    if (!id) return;
-    const fetchMovie = async () => {
-      try {
-        const [movieData, videos, credits, recs] = await Promise.all([
-          getMovieDetails(Number(id)),
-          getMovieVideos(Number(id)),
-          getMovieCredits(Number(id)),
-          getMovieRecommendations(Number(id)),
-        ]);
-
-        setMovie(movieData);
-
-        const trailer = videos.find((v: any) => v.type === 'Trailer' && v.site === 'YouTube');
-        if (trailer) setTrailerKey(trailer.key);
-
-        setCast(credits.cast || []);
-        setRecommendations(recs || []);
-      } catch (err) {
-        console.error('Movie fetch failed:', err);
-      } finally {
-        setLoading(false);
-      }
-    };
-    fetchMovie();
-  }, [id]);
-
-  // Watchlist sync
-  useEffect(() => {
-    if (!id || listsLoading) return;
+    if (!movieId || listsLoading) return;
 
     const watchlist = lists.find(l => l.name.toLowerCase() === 'watchlist');
-
     if (watchlist) {
       setWatchlistId(watchlist.id);
-      const exists = watchlist.movies.some(m => m.id === Number(id));
-      setInWatchlist(exists);
+      setInWatchlist(watchlist.movies.some(m => m.id === movieId));
     } else {
       setWatchlistId(null);
       setInWatchlist(false);
     }
-  }, [id, lists, listsLoading]);
+  }, [movieId, lists, listsLoading]);
 
-  // Add/Remove Watchlist
+  // Toggle watchlist
   const toggleWatchlist = async () => {
     if (!movie) return;
 
     let targetListId = watchlistId;
     let targetList = lists.find(l => l.name.toLowerCase() === 'watchlist');
 
-    // Create "Watchlist" if not exists
     if (!targetList) {
       const createdList = await createList('Watchlist');
       if (!createdList) {
@@ -104,10 +100,9 @@ export const useMovieDetail = (id?: string | string[]) => {
   return {
     movie,
     loading,
-    listsLoading,
     trailerKey,
     cast,
-    recommendations,
+    recommendations: recommendations || [],
     selectedCast,
     setSelectedCast,
     inWatchlist,

@@ -1,6 +1,8 @@
+import { store } from '@/redux/store';
 import { Stack, useRouter } from 'expo-router';
 import React, { useEffect } from 'react';
 import { ActivityIndicator, View } from 'react-native';
+import { Provider } from 'react-redux';
 import { AuthProvider, useAuth } from '../providers/AuthProvider';
 
 function RootNavigator() {
@@ -41,8 +43,10 @@ function RootNavigator() {
 
 export default function RootLayout() {
   return (
-    <AuthProvider>
-      <RootNavigator />
-    </AuthProvider>
+    <Provider store={store}>
+      <AuthProvider>
+        <RootNavigator />
+      </AuthProvider>
+    </Provider>
   );
 }

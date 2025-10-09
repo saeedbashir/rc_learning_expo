@@ -1,8 +1,8 @@
 // app/(tabs)/home/index.tsx
+import MoviesGrid from '@/components/home/HomeMoviesGrid';
 import { useHomeMovies } from '@/hooks/useHomeMovies';
 import { Loader, LoadingContainer } from '@/theme/styles/homeStyles';
 import React from 'react';
-import MoviesGrid from '../../../components/home/HomeMoviesGrid';
 
 const MoviesListScreen = () => {
   const { trending, popular, loading, loadingMore, refreshing, loadMore, onRefresh } =

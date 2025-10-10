@@ -1,3 +1,6 @@
+// providers/AuthProvider.tsx
+import { store } from '@/redux/store';
+import { tmdbApi } from '@/redux/tmdb';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import {
   createUserWithEmailAndPassword,
@@ -37,7 +40,6 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         const storedUser = await AsyncStorage.getItem('user');
         if (storedUser) {
           const parsedUser = JSON.parse(storedUser);
-          console.log('[AuthProvider] restored user from AsyncStorage:', parsedUser.email);
           setUser(parsedUser);
         }
       } catch (err) {
@@ -53,7 +55,6 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, async firebaseUser => {
       if (firebaseUser) {
-        console.log('[AuthProvider] Firebase user active:', firebaseUser.email);
         const userDoc = await getDoc(doc(db, 'users', firebaseUser.uid));
         const profileData = userDoc.exists() ? userDoc.data() : {};
         const fullUser = {
@@ -115,11 +116,11 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
 
   // 🔹 Logout
   const logout = async (): Promise<void> => {
-    console.log('[AuthProvider] logging out...');
     await signOut(auth);
     await AsyncStorage.removeItem('user');
     setUser(null);
-    console.log('[AuthProvider] user cleared from memory & storage');
+    // Clear RTK Query cache for TMDB
+    store.dispatch(tmdbApi.util.resetApiState());
   };
 
   // 🔹 Reset password

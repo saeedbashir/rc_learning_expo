@@ -1,7 +1,6 @@
 // app/(tabs)/home/index.tsx
 import MoviesGrid from '@/components/home/HomeMoviesGrid';
 import { useHomeMovies } from '@/hooks/useHomeMovies';
-import { Loader, LoadingContainer } from '@/theme/styles/homeStyles';
 import React from 'react';
 
 const MoviesListScreen = () => {
@@ -9,11 +8,7 @@ const MoviesListScreen = () => {
     useHomeMovies();
 
   if (loading) {
-    return (
-      <LoadingContainer>
-        <Loader />
-      </LoadingContainer>
-    );
+    return null;
   }
 
   return (

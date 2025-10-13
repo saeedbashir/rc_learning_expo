@@ -1,4 +1,7 @@
 //app/type/types
+
+import { User as FirebaseUser } from 'firebase/auth';
+
 export type TMDBMovie = {
   id: number;
   title: string;
@@ -40,3 +43,12 @@ export type MovieList = {
   name: string;
   movies: TMDBMovie[];
 };
+
+export interface AppUser extends FirebaseUser {
+  name?: string;
+  bio?: string;
+  country?: string;
+  avatar?: string;
+  followers?: number;
+  following?: number;
+}

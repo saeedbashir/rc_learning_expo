@@ -11,11 +11,29 @@ const styles = {
     padding: 20px;
   `,
 
+  AvatarContainer: styled.View`
+    align-items: center;
+    justify-content: center;
+    position: relative;
+  `,
+
+  AvatarLoader: styled.View`
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    align-items: center;
+    justify-content: center;
+  `,
+
   Avatar: styled.Image`
     width: 120px;
     height: 120px;
     border-radius: 60px;
     margin-bottom: 15px;
+    border-color: #ddd;
+    border-width: 2px;
   `,
 
   Name: styled.Text`

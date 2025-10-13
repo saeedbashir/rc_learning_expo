@@ -1,6 +1,7 @@
 // providers/AuthProvider.tsx
 import { store } from '@/redux/store';
 import { tmdbApi } from '@/redux/tmdb';
+import { AppUser } from '@/type/types';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import {
   createUserWithEmailAndPassword,
@@ -10,12 +11,12 @@ import {
   signOut,
   User,
 } from 'firebase/auth';
-import { doc, getDoc, setDoc } from 'firebase/firestore';
-import React, { createContext, ReactNode, useContext, useEffect, useState } from 'react';
+import { doc, onSnapshot, setDoc } from 'firebase/firestore';
+import React, { createContext, ReactNode, useContext, useEffect, useRef, useState } from 'react';
 import { auth, db } from '../utils/firebaseConfig';
 
 type AuthContextType = {
-  user: User | null;
+  user: AppUser | null;
   loading: boolean;
   login: (email: string, password: string) => Promise<User>;
   signup: (
@@ -30,22 +31,18 @@ type AuthContextType = {
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
 export const AuthProvider = ({ children }: { children: ReactNode }) => {
-  const [user, setUser] = useState<User | null>(null);
+  const [user, setUser] = useState<AppUser | null>(null);
   const [loading, setLoading] = useState(true);
+  const userSubRef = useRef<(() => void) | null>(null);
 
   // Load cached user on app startup (before Firebase finishes restoring)
   useEffect(() => {
     const loadCachedUser = async () => {
       try {
-        const storedUser = await AsyncStorage.getItem('user');
-        if (storedUser) {
-          const parsedUser = JSON.parse(storedUser);
-          setUser(parsedUser);
-        }
-      } catch (err) {
-        console.warn('Error loading cached user:', err);
-      } finally {
-        setLoading(false);
+        const cached = await AsyncStorage.getItem('user');
+        if (cached) setUser(JSON.parse(cached));
+      } catch (e) {
+        console.warn('Error loading cached user:', e);
       }
     };
     loadCachedUser();
@@ -53,63 +50,90 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
 
   // Track Firebase auth changes
   useEffect(() => {
-    const unsubscribe = onAuthStateChanged(auth, async firebaseUser => {
+    const unsubAuth = onAuthStateChanged(auth, async firebaseUser => {
       if (firebaseUser) {
-        const userDoc = await getDoc(doc(db, 'users', firebaseUser.uid));
-        const profileData = userDoc.exists() ? userDoc.data() : {};
-        const fullUser = {
-          uid: firebaseUser.uid,
-          email: firebaseUser.email,
-          ...profileData,
-        };
-        setUser(fullUser as any);
-        await AsyncStorage.setItem('user', JSON.stringify(fullUser)); // 🔹 persist user
+        // Clean up previous listener
+        if (userSubRef.current) userSubRef.current();
+
+        const userRef = doc(db, 'users', firebaseUser.uid);
+        userSubRef.current = onSnapshot(
+          userRef,
+          async snap => {
+            if (!snap.exists()) {
+              console.warn('User document not found, creating default');
+              const defaultData = {
+                uid: firebaseUser.uid,
+                email: firebaseUser.email ?? '',
+                name: '',
+                country: '',
+                createdAt: new Date().toISOString(),
+              };
+
+              await setDoc(userRef, defaultData);
+              setUser(defaultData as unknown as AppUser);
+              await AsyncStorage.setItem('user', JSON.stringify(defaultData));
+              setLoading(false);
+              return;
+            }
+
+            const data = snap.data();
+            const fullUser: AppUser = {
+              uid: firebaseUser.uid,
+              email: firebaseUser.email ?? '',
+              ...(data as Record<string, any>),
+            } as AppUser;
+
+            setUser(fullUser);
+            await AsyncStorage.setItem('user', JSON.stringify(fullUser));
+            setLoading(false);
+          },
+          err => {
+            console.error('Firestore listener error:', err);
+            setLoading(false);
+          },
+        );
       } else {
+        // Logged out
+        if (userSubRef.current) userSubRef.current();
+        userSubRef.current = null;
         setUser(null);
         await AsyncStorage.removeItem('user'); // 🔹 clear cache
+        setLoading(false);
       }
-      setLoading(false);
     });
-    return unsubscribe;
+
+    return () => {
+      unsubAuth();
+      if (userSubRef.current) userSubRef.current();
+    };
   }, []);
 
   // Login
-  const login = async (email: string, password: string): Promise<User> => {
-    const userCred = await signInWithEmailAndPassword(auth, email, password);
-    const userDoc = await getDoc(doc(db, 'users', userCred.user.uid));
-    const profileData = userDoc.exists() ? userDoc.data() : {};
-
-    const fullUser = {
-      uid: userCred.user.uid,
-      email: userCred.user.email,
-      ...profileData,
-    };
-
-    await AsyncStorage.setItem('user', JSON.stringify(fullUser));
-    setUser(fullUser as any);
-    return userCred.user;
+  const login = async (email: string, password: string) => {
+    const cred = await signInWithEmailAndPassword(auth, email, password);
+    return cred.user;
   };
 
-  // 🔹 Signup
+  // Signup
   const signup = async (
     email: string,
     password: string,
     extraData?: { name?: string; country?: string },
-  ): Promise<User> => {
-    const userCred = await createUserWithEmailAndPassword(auth, email, password);
-    const newUser = userCred.user;
+  ) => {
+    const cred = await createUserWithEmailAndPassword(auth, email, password);
+    const newUser = cred.user;
 
     const profileData = {
       uid: newUser.uid,
       email,
-      name: extraData?.name || '',
-      country: extraData?.country || '',
+      name: extraData?.name ?? '',
+      country: extraData?.country ?? '',
       createdAt: new Date().toISOString(),
     };
 
     await setDoc(doc(db, 'users', newUser.uid), profileData);
     await AsyncStorage.setItem('user', JSON.stringify(profileData));
-    setUser({ ...newUser, ...profileData } as any);
+    setUser(profileData as unknown as AppUser);
 
     return newUser;
   };

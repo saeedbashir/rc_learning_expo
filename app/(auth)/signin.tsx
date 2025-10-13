@@ -1,8 +1,8 @@
 // app/(auth)/signin.tsx
 import { useRouter } from 'expo-router';
 import { Formik } from 'formik';
-import React from 'react';
-import { Alert } from 'react-native';
+import React, { useState } from 'react';
+import { ActivityIndicator, Alert } from 'react-native';
 import * as Yup from 'yup';
 import { useAuth } from '../../providers/AuthProvider';
 import Styles from './styles/signin.styled';
@@ -16,13 +16,16 @@ const SignInSchema = Yup.object().shape({
 const SignInScreen = () => {
   const router = useRouter();
   const { login } = useAuth();
+  const [signingIn, setSigningIn] = useState(false);
 
   const handleSignIn = async (values: any) => {
     try {
+      setSigningIn(true);
       await login(values.email, values.password);
       // Alert.alert('Success', 'Signed in successfully!');
       // router.replace('/(tabs)');
     } catch (error: any) {
+      setSigningIn(false);
       Alert.alert('Login Failed', error.message);
     }
   };
@@ -33,7 +36,7 @@ const SignInScreen = () => {
       <Styles.Subtitle>Sign in to continue</Styles.Subtitle>
 
       <Formik
-        initialValues={{ email: '', password: '' }}
+        initialValues={{ email: 'a@a.com', password: '123456' }}
         validationSchema={SignInSchema}
         validateOnBlur
         validateOnChange
@@ -70,7 +73,11 @@ const SignInScreen = () => {
             <Styles.ContinueButton
               disabled={!isValid || !values.email || !values.password}
               onPress={handleSubmit as any}>
-              <Styles.ContinueText>Sign In</Styles.ContinueText>
+              {signingIn ? (
+                <ActivityIndicator color="#fff" />
+              ) : (
+                <Styles.ContinueText>Sign In</Styles.ContinueText>
+              )}
             </Styles.ContinueButton>
 
             <Styles.SignupLink onPress={() => router.push('/(auth)/signup')}>

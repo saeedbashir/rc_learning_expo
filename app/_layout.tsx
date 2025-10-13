@@ -1,25 +1,35 @@
 import { store } from '@/redux/store';
-import { Stack, useRouter } from 'expo-router';
+import { Stack, useRouter, useSegments } from 'expo-router';
 import React, { useEffect } from 'react';
 import { ActivityIndicator, View } from 'react-native';
+import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import { Provider } from 'react-redux';
 import { AuthProvider, useAuth } from '../providers/AuthProvider';
 
 function RootNavigator() {
   const { user, loading } = useAuth();
   const router = useRouter();
+  const segments = useSegments();
 
   useEffect(() => {
-    if (!loading) {
-      if (user) {
-        console.log('[RootNavigator] Redirecting to (tabs)');
-        router.replace('/(tabs)');
-      } else {
-        console.log('[RootNavigator] Redirecting to (auth)');
-        router.replace('/(auth)');
-      }
+    if (loading) return;
+
+    const currentGroup = segments[0];
+    const inAuthGroup = currentGroup === '(auth)';
+    const inTabsGroup = currentGroup === '(tabs)';
+
+    // Avoid redundant redirects
+    if (user && inTabsGroup) return;
+    if (!user && inAuthGroup) return;
+
+    if (user && inAuthGroup) {
+      console.log('[RootNavigator] Redirecting to (tabs)');
+      router.replace('/(tabs)');
+    } else if (!user && inTabsGroup) {
+      console.log('[RootNavigator] Redirecting to (auth)');
+      router.replace('/(auth)');
     }
-  }, [user, loading]);
+  }, [user?.uid, loading, segments]);
 
   if (loading) {
     return (
@@ -29,7 +39,6 @@ function RootNavigator() {
     );
   }
 
-  // 👇 Key ensures remount when user flips between null/non-null
   return (
     <Stack key={user ? 'tabs' : 'auth'} screenOptions={{ headerShown: false }}>
       {user ? (
@@ -43,10 +52,12 @@ function RootNavigator() {
 
 export default function RootLayout() {
   return (
-    <Provider store={store}>
-      <AuthProvider>
-        <RootNavigator />
-      </AuthProvider>
-    </Provider>
+    <GestureHandlerRootView style={{ flex: 1 }}>
+      <Provider store={store}>
+        <AuthProvider>
+          <RootNavigator />
+        </AuthProvider>
+      </Provider>
+    </GestureHandlerRootView>
   );
 }
